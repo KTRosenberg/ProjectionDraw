@@ -118,66 +118,66 @@ public static class CTUtil {
 //		);
 //	}
 
-	public class TransformStack {
-		private List<Transform> stack;
-		private int idx;
-		public Transform top { 
-			get { return stack[idx - 1]; }
-		}
-
-		public TransformStack() {
-			stack = new List<Transform>();
-			stack.Add(new GameObject("STACK IDENTITY").transform);
-			stack.Add(new GameObject("STACK").transform);
-			idx = 2;
-		}
-
-		public void Save() {
-			if (idx < stack.Count) {
-				stack[idx].position = top.position;
-				stack[idx].rotation = top.rotation;
-			} else {
-				stack.Add(UnityEngine.Object.Instantiate(top));
-			}
-			idx++;
-		}
-
-		public void Restore() {
-			if (idx > 2) {
-				idx--;
-			} else if (idx == 2) {
-				stack[idx - 1].position = Vector3.zero;
-				stack[idx - 1].rotation = Quaternion.identity;
-			}
-		}
-
-		public void Restart() {
-			idx = 2;
-		}
-
-		public void Clear() {
-			while (stack.Count > 2) {
-				UnityEngine.Object.Destroy(top);
-				stack.RemoveAt(stack.Count - 1);
-				idx--;
-			}
-			stack[1].position = Vector3.zero;
-			stack[1].rotation = Quaternion.identity;
-
-			idx = 2;
-		}
-
-		public override string ToString() {
-			string s = "{";
-			int len = idx;
-			for (int i = 0; i < len; i++) {
-				s = s + "[" + stack[i].position + ":" + stack[i].rotation + "]";
-			}
-			s += "}";
-
-			return s;
-		}
-	}
+//	public class TransformStack {
+//		private List<Transform> stack;
+//		private int idx;
+//		public Transform top { 
+//			get { return stack[idx - 1]; }
+//		}
+//
+//		public TransformStack() {
+//			stack = new List<Transform>();
+//			stack.Add(new GameObject("STACK IDENTITY").transform);
+//			stack.Add(new GameObject("STACK").transform);
+//			idx = 2;
+//		}
+//
+//		public void Save() {
+//			if (idx < stack.Count) {
+//				stack[idx].position = top.position;
+//				stack[idx].rotation = top.rotation;
+//			} else {
+//				stack.Add(UnityEngine.Object.Instantiate(top));
+//			}
+//			idx++;
+//		}
+//
+//		public void Restore() {
+//			if (idx > 2) {
+//				idx--;
+//			} else if (idx == 2) {
+//				stack[idx - 1].position = Vector3.zero;
+//				stack[idx - 1].rotation = Quaternion.identity;
+//			}
+//		}
+//
+//		public void Restart() {
+//			idx = 2;
+//		}
+//
+//		public void Clear() {
+//			while (stack.Count > 2) {
+//				UnityEngine.Object.Destroy(top);
+//				stack.RemoveAt(stack.Count - 1);
+//				idx--;
+//			}
+//			stack[1].position = Vector3.zero;
+//			stack[1].rotation = Quaternion.identity;
+//
+//			idx = 2;
+//		}
+//
+//		public override string ToString() {
+//			string s = "{";
+//			int len = idx;
+//			for (int i = 0; i < len; i++) {
+//				s = s + "[" + stack[i].position + ":" + stack[i].rotation + "]";
+//			}
+//			s += "}";
+//
+//			return s;
+//		}
+//	}
 
 	public class MatrixStack {
 		private List<Matrix4x4> stack;
@@ -269,6 +269,21 @@ public static class CTUtil {
 			return transformedPoints;
 		}
 
+		public Vector3[] TransformInPlace(Vector3[] points) {
+			Vector3[] transformedPoints = points;
+			for (int i = 0; i < points.Length; i++) {
+				transformedPoints[i] = Transform(points[i]);
+			}
+			return transformedPoints;
+		}
+		public List<Vector3> TransformInPlace(List<Vector3> points) {
+			List<Vector3> transformedPoints = points;
+			for (int i = 0; i < points.Count; i++) {
+				transformedPoints[i] = Transform(transformedPoints[i]);
+			}		
+			return transformedPoints;
+		}
+
 		public void Save() {
 			if (idxFirstAvail < stack.Count) {
 				stack[idxFirstAvail] = top;
@@ -317,35 +332,18 @@ public static class CTUtil {
 				return;
 			}
 
-			List<Vector3> nextCurve = new List<Vector3>(strokes);
-			curves.Add(m.Transform(nextCurve));
+			curves.Add(m.Transform(strokes));
 		};
 	}
 
-	public class MCurve {
-		public List<Vector3> curve;
-		private MatrixStack m;
-
-		public MCurve(MatrixStack m) {
-			curve = new List<Vector3>();
-			this.m = m;
-		}
-
-		public void Push(Vector3 p) {
-			this.curve.Add(m.top.MultiplyPoint(p));
-		}
-
-		public void Push(Vector3[] curve) {
-			for (int i = 0; i < curve.Length; i++) {
-				Push(curve[i]);
+	public static Action<List<Vector3>> mCurveInPlace(MatrixStack m, List<List<Vector3>> curves) {
+		return (List<Vector3> strokes) => {
+			if (strokes.Count < 2) {
+				return;
 			}
-		}
 
-		public void Push(List<Vector3> curve) {
-			for (int i = 0; i < curve.Count; i++) {
-				Push(curve[i]);
-			}
-		}
+			curves.Add(m.TransformInPlace(strokes));
+		};
 	}
 }
 
@@ -430,7 +428,7 @@ public class ChalktalkBirdLib {
 	public ChalktalkBirdLib() {
 		instanceID = ChalktalkBirdLib.numInstances++;
 		m = new CTUtil.MatrixStack();
-		mCurve = CTUtil.mCurve(m, _curves);
+		mCurve = CTUtil.mCurveInPlace(m, _curves);
 
 		moving = new Choice();
 		gazing = new Choice();

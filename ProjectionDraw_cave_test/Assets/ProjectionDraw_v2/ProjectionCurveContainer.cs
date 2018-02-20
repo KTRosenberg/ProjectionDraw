@@ -16,13 +16,15 @@ namespace FRL2 {
 #region Projection
 
 public enum State {
-	DEFAULT   = 0,
-	PROJECTED = 1,
+	DEFAULT,
+	PROJECTED,
+	COUNT_STATES
 }
 
 public enum DrawMode {
-	DEBUG_LINE = 0,
-	UNITY_LINE_RENDERER = 1
+	DEBUG_LINE,
+	UNITY_LINE_RENDERER,
+	COUNT_DRAW_MODES
 }
 	
 [ExecuteInEditMode]
@@ -78,19 +80,17 @@ public class ProjectionCurveContainer : MonoBehaviour {
 			}
 		}
 		public List<List<Vector3>> curvesProjected;
-		public List<List<bool>>    curvesVisibility;
 		public List<LineRenderer> lineRenderers;
-		public bool isModified { get; set; }
+		public bool isModified;
 
-		public State state { get; set; }
+		public State state;
 
-		public DrawMode drawMode { get; set; }
+		public DrawMode drawMode;
 
 		public ProjectionMultiCurve(Func<IMultiCurve> mcGen, DrawMode drawMode = DrawMode.UNITY_LINE_RENDERER) {
 			multiCurveType = mcGen();
 			curvesScreen     = new List<List<Vector3>>();
 			curvesProjected  = new List<List<Vector3>>();
-			curvesVisibility = new List<List<bool>>();
 
 			this.drawMode = drawMode;
 			if (drawMode == DrawMode.UNITY_LINE_RENDERER) {
@@ -104,7 +104,6 @@ public class ProjectionCurveContainer : MonoBehaviour {
 			curvesDefault.Clear();
 			curvesScreen.Clear();
 			curvesProjected.Clear();
-			curvesVisibility.Clear();
 			isModified = true;
 		}
 	}
@@ -118,7 +117,7 @@ public class ProjectionCurveContainer : MonoBehaviour {
 		}
 	}
 
-	internal ProjectionMultiCurve data;
+	public ProjectionMultiCurve data;
 
 	public State state { 
 		get { return this.data.state; }
@@ -174,13 +173,16 @@ public class ProjectionCurveContainer : MonoBehaviour {
 		// if using Unity LineRenderer, only re-draw the curves when point data has been modified or 
 		// the perspective has been switched
 		// TODO
-		if (data.drawMode == DrawMode.UNITY_LINE_RENDERER) {
+		switch (data.drawMode) {
+		case DrawMode.UNITY_LINE_RENDERER:
 			if (!data.isModified) {
 				return;
 			}
-			mc.multiCurveType.Draw(new LineRendererDrawArgs(mc.curves, this.transform, mc.lineRenderers, lineRendererPrefab, mc.curvesVisibility));
-		} else {
-			mc.multiCurveType.Draw(new DebugDrawArgs(mc.curves, this.transform, mc.curvesVisibility));
+			mc.multiCurveType.Draw(new LineRendererDrawArgs(mc.curves, this.transform, mc.lineRenderers, lineRendererPrefab));
+			break;
+		default:
+			mc.multiCurveType.Draw(new DebugDrawArgs(mc.curves, this.transform));
+			break;
 		}
 	}
 
@@ -214,15 +216,21 @@ public class ProjectionCurveContainer : MonoBehaviour {
 	}
 
 	// TODO different lists won't necessarily have the same numbers of curves, so this may need to be changed
-	private void AddCurve() {
+	public void AddCurve() {
 		data.curvesDefault.Add(new List<Vector3>());
 		data.curvesScreen.Add(new List<Vector3>());
 		data.curvesProjected.Add(new List<Vector3>());
-		data.curvesVisibility.Add(new List<bool>());
 		this.isModified = true;
 	}
 
-	private void RemoveLastCurve() {
+	public void AddCurve(ProjectionMultiCurve data) {
+		data.curvesDefault.Add(new List<Vector3>());
+		data.curvesScreen.Add(new List<Vector3>());
+		data.curvesProjected.Add(new List<Vector3>());
+		this.isModified = true;
+	}
+
+	private void RemoveEmptyEndCurve() {
 		// TODO, probably only need to remove one or two depending on the state, but will leave as-is
 		// REMEMBER TO CLEAR LineRenderers if draw loop ends before list of renderers ends
 		if (data.curvesDefault.Count > 0) {
@@ -237,24 +245,20 @@ public class ProjectionCurveContainer : MonoBehaviour {
 			data.curvesProjected.RemoveAt(data.curvesProjected.Count - 1);
 			this.isModified = true;
 		}
-		if (data.curvesVisibility.Count > 0) {
-			data.curvesVisibility.RemoveAt(data.curvesVisibility.Count - 1);
-			this.isModified = true;
-		}
 	}
 
-	private void ChangeInverseTransform(List<List<Vector3>> curves, Transform transformOriginal, Transform transformNew) {
+	public void ChangeInverseTransform(List<List<Vector3>> curves, Transform transformOriginal, Transform transformNew) {
 		foreach (List<Vector3> curve in curves) {
 			for (int i = 0; i < curve.Count; i++) {
 				curve[i] = transformNew.InverseTransformPoint(transformOriginal.TransformPoint(curve[i]));
 			}
 		}
 	}
-	private void MergeFromList<T>(List<T> thisData, List<T> otherData) {
+	public void MergeFromList<T>(List<T> thisData, List<T> otherData) {
 		thisData.AddRange(otherData);
 		otherData.Clear();
 	}
-	private void MergeFromList2D<T>(List<List<T>> thisData, List<List<T>> otherData) {
+	public void MergeFromList2D<T>(List<List<T>> thisData, List<List<T>> otherData) {
 		for (int i = 0; i < otherData.Count; i++) {
 			thisData.Add(new List<T>(otherData[i]));
 		}
@@ -273,8 +277,6 @@ public class ProjectionCurveContainer : MonoBehaviour {
 
 		ChangeInverseTransform(other.data.curvesProjected, other.transform, transform);
 		MergeFromList2D(data.curvesProjected, other.data.curvesProjected);
-
-		MergeFromList2D(data.curvesVisibility, other.data.curvesVisibility);
 
 		MergeFromList(data.lineRenderers, other.data.lineRenderers);
 
@@ -295,7 +297,7 @@ public class ProjectionCurveContainer : MonoBehaviour {
 
 	public void EndStroke() {
 		if (data.curves.Count > 0 && data.curves[data.curves.Count - 1].Count < 2) {
-			RemoveLastCurve();
+			RemoveEmptyEndCurve();
 		}
 #if DO_DEBUG_PRINT
 		Debug.Log("END STROKE: NUMCURVES " + data.curves.Count);
@@ -307,8 +309,7 @@ public class ProjectionCurveContainer : MonoBehaviour {
 	public void ReProjectUsingScreenPoints(Camera origin) {
 		SetToDefaultCurveMode();
 		data.curvesDefault.Clear();
-		data.curvesVisibility.Clear();
-		
+
 		// for each existing screen point point
 		for (int i = 0; i < data.curvesScreen.Count; i++) {
 			List<Vector3> curveScreen = data.curvesScreen[i];
@@ -316,7 +317,6 @@ public class ProjectionCurveContainer : MonoBehaviour {
 			List<Vector3> currCurve = new List<Vector3>();
 			List<bool> currVisibility = new List<bool>();
 			data.curvesDefault.Add(currCurve);
-			data.curvesVisibility.Add(currVisibility);
 
 			for (int p = 0; p < curveScreen.Count; p++) {
 				// raycast from origin to screen point
@@ -333,7 +333,6 @@ public class ProjectionCurveContainer : MonoBehaviour {
 					currCurve = new List<Vector3>();
 					currVisibility = new List<bool>();
 					data.curvesDefault.Add(currCurve);
-					data.curvesVisibility.Add(currVisibility);
 				} else {
 					break;
 				}
@@ -341,7 +340,6 @@ public class ProjectionCurveContainer : MonoBehaviour {
 
 			if (currCurve.Count == 1) {
 				data.curvesDefault[data.curvesDefault.Count - 1].Clear();
-				data.curvesVisibility[data.curvesVisibility.Count - 1].Clear();
 			}
 		}
 		isModified = true;
@@ -390,7 +388,6 @@ public class ProjectionCurveContainer : MonoBehaviour {
 
 			data.curves[data.curves.Count - 1].Add(inverseTransformHitPoint);
 			data.curvesScreen[data.curvesScreen.Count - 1].Add(pos);
-			data.curvesVisibility[data.curvesVisibility.Count - 1].Add(true);
 			isModified = true;
 		} else {
 			EndStroke();
@@ -438,7 +435,6 @@ Debug.Log("target hit at world position: " + hit.point);
 
 			List<Vector3> currCurve = data.curves[data.curves.Count - 1];
 			List<Vector3> currCurveScreen = data.curvesScreen[data.curvesScreen.Count - 1];
-			List<bool> currCurveVisibility = data.curvesVisibility[data.curvesVisibility.Count - 1];
 			// project points in-between
 			if (currCurve.Count > 0) {
 
@@ -468,27 +464,21 @@ Debug.Log("target hit at world position: " + hit.point);
 
 						currCurve.Add(inverseTransformHit);
 						currCurveScreen.Add(screenPointLerp);
-						currCurveVisibility.Add(true);
 					} else if (currCurve.Count > 0 && currCurve.Count < 2) {
 						currCurve.Clear();
-						currCurveVisibility.Clear();
 					} else {
 						currCurve = new List<Vector3>();
-						currCurveVisibility = new List<bool>();
 						data.curvesDefault.Add(currCurve);
-						data.curvesVisibility.Add(currCurveVisibility);
 					}
 				}
 				if (currCurve.Count > 0 && currCurve.Count < 2) {
 					data.curvesDefault[data.curvesDefault.Count - 1].Clear();
-					data.curvesVisibility[data.curvesVisibility.Count - 1].Clear();
 				}
 				// TODO, simplify, probably just lerp from start to hit point since a curve might exist between points even if the endpoint doesn't hit
 			}
 
 			currCurve.Add(firstInverseTransformHit);
 			currCurveScreen.Add(pos);
-			currCurveVisibility.Add(true);
 			isModified = true;
 		} else {
 			EndStroke();
@@ -513,11 +503,9 @@ Debug.Log("target hit at world position: " + hit.point);
 		// TEMP RE-INITIALIZATION clearing then adding, better to overwrite existing slots when possible
 		data.curvesProjected.Clear();
 		data.curvesScreen.Clear();
-		data.curvesVisibility.Clear();
 		for (int i = 0; i < curves.Count; i++) {
 			data.curvesProjected.Add(new List<Vector3>());
 			data.curvesScreen.Add(new List<Vector3>());
-			data.curvesVisibility.Add(new List<bool>());			
 		}
 		////////
 
@@ -540,7 +528,6 @@ Debug.Log("target hit at world position: " + hit.point);
 					// Add placeholder values ////////
 					data.curvesProjected[c].Add(curve[p]);
 					data.curvesScreen[c].Add(sPos);
-					data.curvesVisibility[c].Add(false);
 					////////
 					continue;
 				}
@@ -564,7 +551,6 @@ Debug.Log("target hit at world position: " + hit.point);
 					// transform point back into local space
 					data.curvesProjected[c].Add(this.transform.InverseTransformPoint(hit.point));
 					data.curvesScreen[c].Add(sPos);
-					data.curvesVisibility[c].Add(true);
 				} else { // collision miss
 					// TEMP ////////
 //					data.curvesProjected[c].Add(curve[p]);

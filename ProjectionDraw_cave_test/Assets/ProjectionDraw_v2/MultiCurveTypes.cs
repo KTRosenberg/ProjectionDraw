@@ -50,7 +50,6 @@ public class Curve : IMultiCurve {
 	private Action<IDrawArgs> _draw;
 	public void Draw(IDrawArgs args) {
 		args.curves = (args.curves == null) ? this.curves : args.curves;
-		args.visibility = null;
 		_draw(args);
 	}
 }
@@ -144,7 +143,6 @@ public class ChalktalkBird : IMultiCurve {
 		_bird.Update(Time.deltaTime, args.transform);
 
 		args.curves = this.curves;
-		args.visibility = null;
 //		foreach (List<Vector3> curve in args.curves) { // not sure if necessary loop yet
 //			for (int i = 0; i < curve.Count; i++) {
 //				curve[i] = _parentTransform.InverseTransformPoint(curve[i]);

@@ -42,12 +42,6 @@ public class LoopSquare : MonoBehaviour {
 			squareCurve.Add(/*t.InverseTransformPoint*/(new Vector3(-1.0f, 1.0f, 0.0f)));
 			square.Add(squareCurve);
 			projectionMultiCurve.data.curves = square;
-
-			List<List<bool>> visibility = new List<List<bool>>();
-			List<bool> v = new List<bool>(new bool[]{ true, true, true, true, true });
-			visibility.Add(v);
-			projectionMultiCurve.data.curvesVisibility = visibility;
-
 			//this.gameObject.SetActive(false);
 		}
 		//

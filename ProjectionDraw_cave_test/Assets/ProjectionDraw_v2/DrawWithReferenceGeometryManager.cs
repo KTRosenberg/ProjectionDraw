@@ -6,13 +6,17 @@ using FRL.IO;
 
 namespace FRL2 {
 
+
 public class DrawWithReferenceGeometryManager : 
 	MonoBehaviour, 
 	IGlobalTouchpadPressSetHandler,
 	IGlobalTouchpadTouchSetHandler
 {	
 	public bool isInitialized { get; private set; }
-	public bool isActive { get; private set; }
+	public bool isActive { get { return this.currActiveState; } }
+
+	public bool stateIsModified;
+	public bool currActiveState;
 
 	private ProjectionCurveContainer _auxCurve;
 	public ProjectionCurveContainer auxCurve { get { return _auxCurve; } }
@@ -61,6 +65,9 @@ public class DrawWithReferenceGeometryManager :
 		_isRotating = false;
 		_rotationSpeed = 60.0f;
 		_rotationAxis = Vector3.up;
+
+		this.stateIsModified = false;
+		this.currActiveState = false;
 	}
 
 
@@ -74,7 +81,6 @@ public class DrawWithReferenceGeometryManager :
 		}
 		refGeometry.transform.RotateAround(refGeometry.transform.position, _rotationAxis, Time.deltaTime * _rotationSpeed);
 		_auxCurve.transform.RotateAround(refGeometry.transform.position, _rotationAxis, Time.deltaTime * _rotationSpeed);
-	
 	}
 
 	private float _cycleStartTime;
@@ -84,7 +90,9 @@ public class DrawWithReferenceGeometryManager :
 	private Vector3 _onPosition;
 	void IGlobalTouchpadPressDownHandler.OnGlobalTouchpadPressDown(VREventData eventData) {
 		// toggle active state
-		isActive = !isActive;
+		this.currActiveState = !this.currActiveState;
+		this.stateIsModified = true;
+
 		// toggle auxiliary curve on state
 		_auxCurve.gameObject.SetActive(isActive);
 		// toggle geometry reference object on state

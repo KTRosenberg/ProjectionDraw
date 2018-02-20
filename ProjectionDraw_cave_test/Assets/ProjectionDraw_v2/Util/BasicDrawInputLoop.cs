@@ -73,11 +73,14 @@ IGlobalGripPressDownHandler
 
 		ProjectionDrawInputHandler.InputStatus status = input.updateInputStatus();
 
-		if (drawWithRefManager.isActive) { // TODO do not MergeFrom repeatedly, only on frame when change occurs
-			_projectionMultiCurve = drawWithRefManager.auxCurve;
-		} else {
-			_projectionMultiCurve = projectionMultiCurve;
-			_projectionMultiCurve.MergeFrom(drawWithRefManager.auxCurve);
+		if (drawWithRefManager.stateIsModified) {
+			drawWithRefManager.stateIsModified = false;
+			if (drawWithRefManager.isActive) {
+				_projectionMultiCurve = drawWithRefManager.auxCurve;
+			} else {
+				_projectionMultiCurve = projectionMultiCurve;
+				_projectionMultiCurve.MergeFrom(drawWithRefManager.auxCurve);
+			}
 		}
 
 		// temp clean up branches
