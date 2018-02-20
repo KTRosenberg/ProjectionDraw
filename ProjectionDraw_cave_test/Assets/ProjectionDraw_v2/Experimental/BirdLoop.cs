@@ -23,7 +23,7 @@ public class BirdLoop : MonoBehaviour {
 					if (!project) {
 						return args.curves;
 					}
-					return ProjectionCurveContainer.SampleAndProject(args.curves, Camera.main, projectionMultiCurve.transform, 0.007, true, false);
+					return ProjectionCurveContainer.SampleAndProject(curves : args.curves, origin : Camera.main, transform : projectionMultiCurve.transform, tVal : 0.007, allowBehindSurface : true, allowBehindOrigin : false);
 				}),	DrawMode.UNITY_LINE_RENDERER);
 
 			//this.gameObject.SetActive(false);
