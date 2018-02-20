@@ -230,7 +230,7 @@ public class ProjectionCurveContainer : MonoBehaviour {
 		this.isModified = true;
 	}
 
-	private void RemoveEmptyEndCurve() {
+	private void RemoveLastCurve() {
 		// TODO, probably only need to remove one or two depending on the state, but will leave as-is
 		// REMEMBER TO CLEAR LineRenderers if draw loop ends before list of renderers ends
 		if (data.curvesDefault.Count > 0) {
@@ -297,7 +297,7 @@ public class ProjectionCurveContainer : MonoBehaviour {
 
 	public void EndStroke() {
 		if (data.curves.Count > 0 && data.curves[data.curves.Count - 1].Count < 2) {
-			RemoveEmptyEndCurve();
+			RemoveLastCurve();
 		}
 #if DO_DEBUG_PRINT
 		Debug.Log("END STROKE: NUMCURVES " + data.curves.Count);
