@@ -9,7 +9,10 @@ public class ProjectionDrawInputHandler :
 	MonoBehaviour, 
 	IGlobalTriggerPressSetHandler/*, 
 	IGlobalTouchpadTouchSetHandler*/ {
-	
+
+	public ViveControllerModule leftModule;
+	public ViveControllerModule rightModule;
+
 	public enum InputDeviceOpt {
 		NONE = 0,
 		MOUSE = 1,

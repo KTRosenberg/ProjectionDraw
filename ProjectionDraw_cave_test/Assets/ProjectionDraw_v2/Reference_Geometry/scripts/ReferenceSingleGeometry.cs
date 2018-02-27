@@ -6,16 +6,20 @@ using FRL.IO;
 
 namespace FRL2 {
 
-
-public class DrawWithReferenceGeometryManager : 
-	MonoBehaviour, 
+public class ReferenceSingleGeometry : MonoBehaviour,
+	IReferenceGeometry,
 	IGlobalTouchpadPressSetHandler,
 	IGlobalTouchpadTouchSetHandler
 {	
+	public ViveControllerModule leftModule;
+	public ViveControllerModule rightModule;
+
 	public bool isInitialized { get; private set; }
 	public bool isActive { get { return this.currActiveState; } }
 
+	[HideInInspector]
 	public bool stateIsModified;
+	[HideInInspector]
 	public bool currActiveState;
 
 	private ProjectionCurveContainer _auxCurve;
@@ -51,7 +55,7 @@ public class DrawWithReferenceGeometryManager :
 		}
 	}
 
-	public void Init(ProjectionCurveContainer mc, Func<IMultiCurve> mcGen, DrawMode drawMode = DrawMode.DEBUG_LINE) {
+	public void Init(ProjectionCurveContainer mc, Func<IMultiCurve> mcGen, DrawMode drawMode = DrawMode.UNITY_LINE_RENDERER) {
 		if (isInitialized) {
 			return;
 		}

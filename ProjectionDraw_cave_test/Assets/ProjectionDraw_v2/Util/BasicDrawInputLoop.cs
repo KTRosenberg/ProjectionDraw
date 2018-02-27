@@ -17,7 +17,7 @@ IGlobalGripPressDownHandler
 	private ProjectionCurveContainer _projectionMultiCurve;
 
 	public ProjectionDrawInputHandler input;
-	public DrawWithReferenceGeometryManager drawWithRefManager;
+	public ReferenceSingleGeometry drawWithRefManager;
 
 	public Camera origin;
 	public bool useLineRenderer = false;
