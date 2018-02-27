@@ -93,6 +93,9 @@ public class ProjectionDrawInputHandler :
 		if (dev != InputDeviceOpt.VIVE) {
 			return;
 		}
+		if (eventData.module != rightModule) {
+			return;
+		}
 
 		_status.strokeStart = true;
 		_status.strokeEnd = false;
@@ -119,6 +122,9 @@ public class ProjectionDrawInputHandler :
 	}
 	void IGlobalTriggerPressHandler.OnGlobalTriggerPress(VREventData eventData) {
 		if (dev != InputDeviceOpt.VIVE) {
+			return;
+		}
+		if (eventData.module != rightModule) {
 			return;
 		}
 			
@@ -150,6 +156,9 @@ public class ProjectionDrawInputHandler :
 
 	void IGlobalTriggerPressUpHandler.OnGlobalTriggerPressUp(VREventData eventData) {
 		if (dev != InputDeviceOpt.VIVE) {
+			return;
+		}
+		if (eventData.module != rightModule) {
 			return;
 		}
 

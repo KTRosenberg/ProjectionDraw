@@ -22,6 +22,8 @@ public class ReferenceSingleGeometry : MonoBehaviour,
 	[HideInInspector]
 	public bool currActiveState;
 
+	public List<ProjectionCurveContainer> auxCurves;
+
 	private ProjectionCurveContainer _auxCurve;
 	public ProjectionCurveContainer auxCurve { get { return _auxCurve; } }
 
@@ -92,6 +94,7 @@ public class ReferenceSingleGeometry : MonoBehaviour,
 	private bool _touchpadPressedOn = false;
 	private bool _rotationControlOn = false;
 	private Vector3 _onPosition;
+
 	void IGlobalTouchpadPressDownHandler.OnGlobalTouchpadPressDown(VREventData eventData) {
 		// toggle active state
 		this.currActiveState = !this.currActiveState;
