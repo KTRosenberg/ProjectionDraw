@@ -5,7 +5,7 @@ using UnityEditor;
 using System;
 using System.Diagnostics;
 
-namespace FRL2 {
+namespace FRL_KTR {
 
 public enum MultiCurveType {
 	CURVE = 0,

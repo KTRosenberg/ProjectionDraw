@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-namespace FRL2 {
+namespace FRL_KTR {
 
 [CustomEditor(typeof(MultiCurveFactory))]
 [CanEditMultipleObjects]

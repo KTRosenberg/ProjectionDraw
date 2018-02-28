@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-namespace FRL2 {
+namespace FRL_KTR {
 
 public class MultiCurveFactory : MonoBehaviour {
 	public MultiCurveType curveType;

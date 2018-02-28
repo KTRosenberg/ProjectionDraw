@@ -6,7 +6,7 @@ using UnityEngine;
 using FRL.IO;
 using System;
 
-namespace FRL2 {
+namespace FRL_KTR {
 
 public class MultiGeoDrawInputLoop : MonoBehaviour, 
 IGlobalGripPressUpHandler,

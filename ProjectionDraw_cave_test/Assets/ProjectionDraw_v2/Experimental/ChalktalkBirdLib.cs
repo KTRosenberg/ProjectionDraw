@@ -4,7 +4,7 @@ using UnityEngine;
 using System;
 using System.Diagnostics;
 
-namespace FRL2 {
+namespace FRL_KTR {
 
 public static class CTUtil {
 	public static double SCurve(double t) { return t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - t - t); }

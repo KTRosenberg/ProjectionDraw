@@ -4,7 +4,7 @@ using UnityEngine;
 using System;
 using FRL.IO;
 
-namespace FRL2 {
+namespace FRL_KTR {
 
 public class ReferenceMultipleGeometry : MonoBehaviour,
 IReferenceGeometry,

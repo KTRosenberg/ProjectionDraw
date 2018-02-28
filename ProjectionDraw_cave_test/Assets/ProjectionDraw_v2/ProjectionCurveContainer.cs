@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Diagnostics;
 
-namespace FRL2 {
+namespace FRL_KTR {
 
 #region Projection
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FRL2 {
+namespace FRL_KTR {
 
 public class BirdLoop : MonoBehaviour {
 	public ProjectionCurveContainer projectionMultiCurve;
