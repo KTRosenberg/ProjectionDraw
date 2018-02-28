@@ -45,7 +45,8 @@ IGlobalGripPressDownHandler
 	private List<GameObject> _refGeometryList;
 	private List<Quaternion> _refGeometryRotationIdents;
 	private int _activeRefGeometryIdx;
-	List<List<GameObject>> _refGeometryInstances;
+	List<GameObject> refGeometryInstances;
+	int entityIdx = 0;
 
 	private bool _isRotating;
 	private float _rotationSpeed;
@@ -54,14 +55,13 @@ IGlobalGripPressDownHandler
 	public void Awake() {
 		_refGeometryList = new List<GameObject>();
 		_refGeometryRotationIdents = new List<Quaternion>();
-		_refGeometryInstances = new List<List<GameObject>>();
+		refGeometryInstances = new List<GameObject>();
 
 		foreach (GameObject prefab in refGeometryPrefabList) {
 			GameObject inst = Instantiate(prefab);
 			inst.SetActive(false);
 			_refGeometryList.Add(inst);
 			_refGeometryRotationIdents.Add(_refGeometryList[_refGeometryList.Count - 1].transform.rotation);
-			_refGeometryInstances.Add(new List<GameObject>());
 		}
 	}
 
@@ -108,11 +108,11 @@ IGlobalGripPressDownHandler
 			return;
 		}
 
-		List<GameObject> geometryList = _refGeometryInstances[_activeRefGeometryIdx];
-		if (geometryList.Count < 1) {
+		if (refGeometryInstances.Count < 1) {
 			return;
 		}
-		GameObject refGeometry = geometryList[geometryList.Count - 1];
+			
+		GameObject refGeometry = activeRef;
 
 		refGeometry.transform.RotateAround(refGeometry.transform.position, _rotationAxis, Time.deltaTime * _rotationSpeed);
 		_auxCurve.transform.RotateAround(refGeometry.transform.position, _rotationAxis, Time.deltaTime * _rotationSpeed);
@@ -137,24 +137,55 @@ IGlobalGripPressDownHandler
 		this.currActiveState = !this.currActiveState;
 		this.stateIsModified = true;
 	}
+
+
+	// REFERENCE GEOMETRY SELECTION
+	static int referenceGeometryLayer = 8;
+	static int layerMask = 1 << referenceGeometryLayer;
+
+	static GameObject SelectReferenceGeometryWithRaycast(
+		Camera origin, 
+		Vector3 pointWorld,
+		bool allowBehindSurface = false,
+		bool allowBehindOrigin = false
+	) {
+		Vector3 sPos = origin.WorldToScreenPoint(pointWorld);
+		Ray r = origin.ScreenPointToRay(sPos);
+		RaycastHit hit;
+		GameObject referenceGeometry = null;
+
+		Debug.DrawRay(r.origin, r.direction * 20.0f, Color.blue);
+
+		if (Physics.Raycast(r, out hit, Mathf.Infinity, layerMask)) {
+			referenceGeometry = hit.collider.gameObject;
+		}
+
+		return referenceGeometry;
+	}
+		
 	void IGlobalTouchpadPressHandler.OnGlobalTouchpadPress(VREventData eventData) {
-		if (CANT_LEAVE) {
+		if (eventData.module != leftModule) {
+			return;
+		}
+		if (isCreatingReferenceGeometry) {
 			return;
 		}
 
-		if (!_touchpadPressedOn) {
-			GameObject refGeometry = _refGeometryList[_activeRefGeometryIdx];
-			refGeometry.SetActive(false);
+		Vector3 p = eventData.module.transform.position;
+		GameObject refG = SelectReferenceGeometryWithRaycast(Camera.main, p);
 
-			_activeRefGeometryIdx = 0;
-
-			_rotationControlOn = false;
-			_isRotating = false;
+		if (refG == null) {
 			return;
 		}
+
+		// TODO assign rotating state to each reference geometry
+		_isRotating = false;
+		_auxCurve = auxCurves[(int)Char.GetNumericValue(refG.name[0])];
+		activeRef = refG;
+
+		this.stateIsModified = true;
 	}
 	void IGlobalTouchpadPressUpHandler.OnGlobalTouchpadPressUp(VREventData eventData) {
-		_rotationControlOn = isActive && _touchpadPressedOn;
 	}
 
 	// touch controls for touchpad
@@ -214,6 +245,8 @@ IGlobalGripPressDownHandler
 
 
 	//////////////////////////////////////////////////////////////////////////////////
+	bool isCreatingReferenceGeometry = false;
+
 	void IGlobalTriggerPressDownHandler.OnGlobalTriggerPressDown(VREventData eventData) {
 		if (!isActive) {
 			return;
@@ -221,6 +254,8 @@ IGlobalGripPressDownHandler
 		if (eventData.module != leftModule) {
 			return;
 		}
+
+		isCreatingReferenceGeometry = true;
 
 		// toggle geometry reference object on state
 		_refGeometryList[_activeRefGeometryIdx].SetActive(isActive);
@@ -248,13 +283,11 @@ IGlobalGripPressDownHandler
 		_auxCurve = c;
 		auxCurves.Add(c);
 
-		stateIsModified = true;
-
 		_auxCurve.transform.position = refGeometry.transform.position;
 
 		_cycleStartTime = Time.time;
 
-
+		stateIsModified = true;
 	}
 
 	void IGlobalTriggerPressHandler.OnGlobalTriggerPress(VREventData eventData) {
@@ -280,7 +313,7 @@ IGlobalGripPressDownHandler
 		}
 	}
 
-	GameObject latestRef = null;
+	GameObject activeRef = null;
 	void IGlobalTriggerPressUpHandler.OnGlobalTriggerPressUp(VREventData eventData) {
 		if (!isActive) {
 			return;
@@ -290,24 +323,28 @@ IGlobalGripPressDownHandler
 		}
 		GameObject refGeometry = _refGeometryList[_activeRefGeometryIdx];
 
-		latestRef = Instantiate(_refGeometryList[_activeRefGeometryIdx]);
-		_refGeometryInstances[_activeRefGeometryIdx].Add(latestRef);
+		activeRef = Instantiate(_refGeometryList[_activeRefGeometryIdx]);
+		int nextIdx = ++entityIdx;
+		activeRef.name = nextIdx.ToString() + "_" + refGeometry.name;
 
-		_onPosition = latestRef.transform.position;
-		_auxCurve.transform.position = latestRef.transform.position;
+		refGeometryInstances.Add(activeRef);
+
+		_onPosition = activeRef.transform.position;
+		_auxCurve.transform.position = activeRef.transform.position;
 		_cycleStartTime = Time.time;
 
 		refGeometry.SetActive(false);
+
+		isCreatingReferenceGeometry = false;
 	}
 
 	void IGlobalGripPressDownHandler.OnGlobalGripPressDown(VREventData eventData) {
 		if (eventData.module == leftModule) {
-			foreach (List<GameObject> L in _refGeometryInstances) {
-				foreach (GameObject gRef in L) {
-					UnityEngine.Object.Destroy(gRef);
-				}
-				L.Clear();
+			foreach (GameObject refG in refGeometryInstances) {
+				UnityEngine.Object.Destroy(refG);
 			}
+			refGeometryInstances.Clear();
+			_isRotating = false;
 		} else if (eventData.module == rightModule) {
 			foreach (ProjectionCurveContainer c in auxCurves) {
 				c.Clear();
