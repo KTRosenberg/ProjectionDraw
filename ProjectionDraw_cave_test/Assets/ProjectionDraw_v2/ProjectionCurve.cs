@@ -54,6 +54,8 @@ public class ProjectionMultiCurve {
 	}
 	public List<List<Vector3>> curvesProjected;
 	public List<LineRenderer> lineRenderers;
+	// temp (TODO)
+	public List<Color> lineColors;
 	public bool isModified;
 
 	public State state;

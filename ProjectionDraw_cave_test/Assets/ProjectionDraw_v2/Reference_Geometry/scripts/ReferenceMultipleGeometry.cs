@@ -154,8 +154,6 @@ IGlobalGripPressDownHandler
 		RaycastHit hit;
 		GameObject referenceGeometry = null;
 
-		Debug.DrawRay(r.origin, r.direction * 20.0f, Color.blue);
-
 		if (Physics.Raycast(r, out hit, Mathf.Infinity, layerMask)) {
 			referenceGeometry = hit.collider.gameObject;
 		}
@@ -167,9 +165,12 @@ IGlobalGripPressDownHandler
 		if (eventData.module != leftModule) {
 			return;
 		}
+		// TODO similar block in other function
 		if (isCreatingReferenceGeometry) {
 			return;
 		}
+
+		isSwitchingReferenceGeometry = true;
 
 		Vector3 p = eventData.module.transform.position;
 		GameObject refG = SelectReferenceGeometryWithRaycast(Camera.main, p);
@@ -183,10 +184,26 @@ IGlobalGripPressDownHandler
 		_auxCurve = auxCurves[(int)Char.GetNumericValue(refG.name[0])];
 		activeRef = refG;
 
+		activeRef.GetComponent<Renderer>().material.SetColor(selectionColorProperty, selectionColor);
+
 		this.stateIsModified = true;
 	}
 	void IGlobalTouchpadPressUpHandler.OnGlobalTouchpadPressUp(VREventData eventData) {
+		if (eventData.module != leftModule) {
+			return;
+		}
+		if (isCreatingReferenceGeometry) {
+			return;
+		}
+			
+		activeRef.GetComponent<Renderer>().material.SetColor(selectionColorProperty, initialColor);
+		isSwitchingReferenceGeometry = false;
 	}
+
+	static string selectionColorProperty = "_Color";
+	static Color initialColor = new Color(0.882f, 0.882f, 0.882f, 1.0f);
+
+	static Color selectionColor = new Color(0.0f, 0.0f, 0.5f, 0.6f);
 
 	// touch controls for touchpad
 
@@ -246,12 +263,16 @@ IGlobalGripPressDownHandler
 
 	//////////////////////////////////////////////////////////////////////////////////
 	bool isCreatingReferenceGeometry = false;
+	bool isSwitchingReferenceGeometry = false;
 
 	void IGlobalTriggerPressDownHandler.OnGlobalTriggerPressDown(VREventData eventData) {
 		if (!isActive) {
 			return;
 		}
 		if (eventData.module != leftModule) {
+			return;
+		}
+		if (isSwitchingReferenceGeometry) {
 			return;
 		}
 
@@ -297,6 +318,9 @@ IGlobalGripPressDownHandler
 		if (eventData.module != leftModule) {
 			return;
 		}
+		if (isSwitchingReferenceGeometry) {
+			return;
+		}
 
 		double elapsed = Time.time - _cycleStartTime;
 		// move to next geometry in list
@@ -321,6 +345,10 @@ IGlobalGripPressDownHandler
 		if (eventData.module != leftModule) {
 			return;
 		}
+		if (isSwitchingReferenceGeometry) {
+			return;
+		}
+
 		GameObject refGeometry = _refGeometryList[_activeRefGeometryIdx];
 
 		activeRef = Instantiate(_refGeometryList[_activeRefGeometryIdx]);

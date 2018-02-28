@@ -140,6 +140,21 @@ public static class DrawFunctions {
 				arr[i] = transform.TransformPoint(arr[i]);
 			}
 			lineRenderers[k].SetPositions(arr);
+
+//			Material m = lineRenderers[k].material;
+//
+//			UnityEngine.Color col = new UnityEngine.Color(
+//				Mathf.PerlinNoise(Mathf.Sin(Time.time), Mathf.Sin(Time.time)),
+//				Mathf.PerlinNoise(Mathf.Sin(Time.time * 11.0f), Mathf.Sin(Time.time * 41.0f)),
+//				Mathf.PerlinNoise(Mathf.Sin(Time.time * 71.0f), Mathf.Sin(Time.time * 101.0f))
+//			);
+//				
+//			m.color = col;
+//			m.SetColor("_Color", m.color);
+//			m.SetColor("_EmissionColor", m.color);
+//			lineRenderers[k].material = m;
+//			lineRenderers[k].startColor = m.color;
+//			lineRenderers[k].endColor = m.color;
 		}
 	}
 }
