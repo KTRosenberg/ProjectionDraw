@@ -91,6 +91,11 @@ IGlobalGripPressDownHandler
 		this.stateIsModified = false;
 		this.currActiveState = false;
 
+		///////// TEMP, ALWAYS ACTIVE ON START
+		this.currActiveState = !this.currActiveState;
+		this.stateIsModified = true;
+		/////////
+
 	}
 
 
@@ -296,14 +301,17 @@ IGlobalGripPressDownHandler
 	}
 
 	void IGlobalGripPressDownHandler.OnGlobalGripPressDown(VREventData eventData) {
-		if (eventData.module != leftModule) {
-			return;
-		}
-		foreach (List<GameObject> L in _refGeometryInstances) {
-			foreach (GameObject gRef in L) {
-				UnityEngine.Object.Destroy(gRef);
+		if (eventData.module == leftModule) {
+			foreach (List<GameObject> L in _refGeometryInstances) {
+				foreach (GameObject gRef in L) {
+					UnityEngine.Object.Destroy(gRef);
+				}
+				L.Clear();
 			}
-			L.Clear();
+		} else if (eventData.module == rightModule) {
+			foreach (ProjectionCurveContainer c in auxCurves) {
+				c.Clear();
+			}
 		}
 		// TODO merge all curves into one 
 	}
