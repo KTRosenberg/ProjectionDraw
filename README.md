@@ -15,7 +15,7 @@ example, one might create a sphere, point at its equator, hold the draw button i
 rotate the sphere on the y-axis to trace a circular path around the equator. Deleting the sphere
 would leave a circular path. Alternatively, one could point at the center of the sphere, hold
 draw, and walk around the sphere (comparable to a sculptor’s way of thinking).
-Implementation: Unity engine project using HTC Vive by default
+Implementation: Unity engine project using HTC Vive.
 
 ### Demo Videos:
 
