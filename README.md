@@ -5,7 +5,7 @@ Solution: use objects as surfaces and points-of-reference for drawing-upon, or f
 
 How it works: The user’s perspective determines the shape of line strokes he/she draws. Lines are
 projected onto the world as they are drawn or moved. The user can spawn objects to draw-on,
-and can transform (reposition, rotate) those objects to influence lines drawn on those objects
+and can transform (reposition, rotate) those objects to influence lines drawn on those objects.
 
 User-drawn lines are projected onto geometry in the background. A drawing appears
 normal from an initial perspective, but when the user moves, it becomes clear that the drawing
